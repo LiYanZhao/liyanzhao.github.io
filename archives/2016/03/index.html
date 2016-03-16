@@ -315,7 +315,7 @@
             }
             else {
                 var backgroundnum = 3;
-                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi,backgroundnum);
                 $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
             }
         })
