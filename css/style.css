@@ -890,12 +890,12 @@ a {
 #header .header-nav .social #Email {
   background: url("/img/Email.png") center no-repeat #6fc0e4;
 }
-#header .header-nav .social .RSS:before {
+#header .header-nav .social .rss:before {
   content: '\f18a';
   color: transparent;
 }
-#header .header-nav .social #RSS {
-  background: url("/img/RSS.png") center no-repeat #ef7522;
+#header .header-nav .social #rss {
+  background: url("/img/rss.png") center no-repeat #ef7522;
 }
 #header .header-nav .social .Google:before {
   content: '\f1a0';
