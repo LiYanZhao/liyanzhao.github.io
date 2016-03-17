@@ -1039,6 +1039,7 @@ a {
   position: fixed;
   left: 378px;
   top: 30px;
+  display: none;
   padding: 1px;
   border: none;
   -webkit-border-radius: 5px;
