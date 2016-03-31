@@ -8,7 +8,7 @@
   <meta name="description" content="title:深入理解Android读书笔记 - JNI
 tags： Android JNI
 
-JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运行">
+JNI概述 Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
 <meta property="og:url" content="http://yoursite.com/2016/03/31/深入理解Android读书笔记 - JNI/index.html">
@@ -16,14 +16,14 @@ JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一�
 <meta property="og:description" content="title:深入理解Android读书笔记 - JNI
 tags： Android JNI
 
-JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运行">
-<meta property="og:updated_time" content="2016-03-31T14:21:06.000Z">
+JNI概述 Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运">
+<meta property="og:updated_time" content="2016-03-31T14:22:00.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Hexo">
 <meta name="twitter:description" content="title:深入理解Android读书笔记 - JNI
 tags： Android JNI
 
-JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运行">
+JNI概述 Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -256,8 +256,8 @@ JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一�
         <p>title:深入理解Android读书笔记 - JNI</p>
 <p>tags： Android JNI</p>
 <hr>
-<h3 id="JNI概述"><a href="#JNI概述" class="headerlink" title="JNI概述"></a>JNI概述</h3><pre><code>Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运行效率能使我们的开发工作更快捷，更有效率。
-</code></pre><h3 id="JNI开发流程"><a href="#JNI开发流程" class="headerlink" title="JNI开发流程"></a>JNI开发流程</h3><p> 用Android Studio做JNI开发，首先在local.properties中配置NDK目录<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ndk.dir= $&#123;ndk local dir&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="JNI概述"><a href="#JNI概述" class="headerlink" title="JNI概述"></a>JNI概述</h3><p> Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运行效率能使我们的开发工作更快捷，更有效率。</p>
+<h3 id="JNI开发流程"><a href="#JNI开发流程" class="headerlink" title="JNI开发流程"></a>JNI开发流程</h3><p> 用Android Studio做JNI开发，首先在local.properties中配置NDK目录<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ndk.dir= $&#123;ndk local dir&#125;</span><br></pre></td></tr></table></figure></p>
 <p>然后还需要在gradle.properties中配置<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">android.useDeprecatedNdk=true</span><br></pre></td></tr></table></figure></p>
 <p>环境配置好后，我们还需要在build.gradle中配置生成的动态库的信息<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">defaultConfig &#123;</span><br><span class="line">    ndk&#123;</span><br><span class="line">        moduleName=&quot;helloJni&quot; //生成的so库名称</span><br><span class="line">        // abiFilters &quot;armeabi&quot;,&quot;x86&quot; //指定支持的ABIs</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>现在我们开始定义Native函数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class JniTest &#123;</span><br><span class="line">    static &#123;</span><br><span class="line">        System.loadLibrary(&quot;helloJni&quot;);  //加载动态库</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    public static native String helloJni(JniTest test);</span><br><span class="line"></span><br><span class="line">    public String nativeCallJava()&#123;</span><br><span class="line">        return &quot;native call java&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
@@ -273,7 +273,7 @@ JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一�
         <p><span>本文标题:</span><a href="/2016/03/31/深入理解Android读书笔记 - JNI/"></a></p>
         <p><span>文章作者:</span><a href="/" title="访问 LiYanZhao 的个人博客">LiYanZhao</a></p>
         <p><span>发布时间:</span>2016年03月31日 - 22时03分</p>
-        <p><span>最后更新:</span>2016年03月31日 - 22时21分</p>
+        <p><span>最后更新:</span>2016年03月31日 - 22时22分</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2016/03/31/深入理解Android读书笔记 - JNI/" title="">http://yoursite.com/2016/03/31/深入理解Android读书笔记 - JNI/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2016/03/31/深入理解Android读书笔记 - JNI/　　作者: LiYanZhao" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
