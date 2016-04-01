@@ -9,17 +9,17 @@
 JNI开发流程 用Android Studio做J">
 <meta property="og:type" content="article">
 <meta property="og:title" content="深入理解Android读书笔记 - JNI">
-<meta property="og:url" content="http://yoursite.com/2016/03/31/深入理解Android读书笔记 - JNI/index.html">
+<meta property="og:url" content="http://yoursite.com/2016/04/01/深入理解Android读书笔记 - JNI/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运行效率能使我们的开发工作更快捷，更有效率。
 JNI开发流程 用Android Studio做J">
-<meta property="og:image" content="https://github.com/liyanzhao/liyanzhao.github.io/blob/master/img/android_studio_jni.png">
-<meta property="og:updated_time" content="2016-03-31T15:20:53.000Z">
+<meta property="og:image" content="https://raw.githubusercontent.com/liyanzhao/liyanzhao.github.io/master/img/android_studio_jni.png">
+<meta property="og:updated_time" content="2016-04-01T05:29:19.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入理解Android读书笔记 - JNI">
 <meta name="twitter:description" content="JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运行效率能使我们的开发工作更快捷，更有效率。
 JNI开发流程 用Android Studio做J">
-<meta name="twitter:image" content="https://github.com/liyanzhao/liyanzhao.github.io/blob/master/img/android_studio_jni.png">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/liyanzhao/liyanzhao.github.io/master/img/android_studio_jni.png">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -236,8 +236,8 @@ JNI开发流程 用Android Studio做J">
       <div class="body-wrap"><article id="post-深入理解Android读书笔记 - JNI" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2016/03/31/深入理解Android读书笔记 - JNI/" class="article-date">
-      <time datetime="2016-03-31T15:20:53.000Z" itemprop="datePublished">2016-03-31</time>
+      <a href="/2016/04/01/深入理解Android读书笔记 - JNI/" class="article-date">
+      <time datetime="2016-04-01T05:29:19.000Z" itemprop="datePublished">2016-04-01</time>
 </a>
     </div>
   
@@ -277,7 +277,7 @@ JNI开发流程 用Android Studio做J">
 <p>然后还需要在gradle.properties中配置<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">android.useDeprecatedNdk=true</span><br></pre></td></tr></table></figure></p>
 <p>环境配置好后，我们还需要在build.gradle中配置生成的动态库的信息<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">defaultConfig &#123;</span><br><span class="line">    ndk&#123;</span><br><span class="line">        moduleName=&quot;helloJni&quot; //生成的so库名称</span><br><span class="line">        // abiFilters &quot;armeabi&quot;,&quot;x86&quot; //指定支持的ABIs</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>现在我们开始定义Native函数<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JniTest</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.loadLibrary(<span class="string">"helloJni"</span>);  <span class="comment">//加载动态库</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">native</span> String <span class="title">helloJni</span><span class="params">(JniTest test)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">nativeCallJava</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"native call java"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>helloJni就是我们定义的Native函数,定义好后helloJni会显示红色，alt + enter 查看会提示<br><img src="https://github.com/liyanzhao/liyanzhao.github.io/blob/master/img/android_studio_jni.png" alt=""><br>点击Create function，Android Studio会自动帮我们创建jni/helloJni.c<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;jni.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">JNIEXPORT jstring JNICALL</span><br><span class="line"><span class="title">Java_test_jni_JniTest_helloJni</span><span class="params">(JNIEnv *env, jclass type, jobject test)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// TODO</span></span><br><span class="line">    <span class="keyword">return</span> (*env)-&gt;NewStringUTF(env, <span class="string">"hello jni"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>helloJni就是我们定义的Native函数,定义好后helloJni会显示红色，alt + enter 查看会提示<br><img src="https://raw.githubusercontent.com/liyanzhao/liyanzhao.github.io/master/img/android_studio_jni.png" alt=""><br>点击Create function，Android Studio会自动帮我们创建jni/helloJni.c<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;jni.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">JNIEXPORT jstring JNICALL</span><br><span class="line"><span class="title">Java_test_jni_JniTest_helloJni</span><span class="params">(JNIEnv *env, jclass type, jobject test)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// TODO</span></span><br><span class="line">    <span class="keyword">return</span> (*env)-&gt;NewStringUTF(env, <span class="string">"hello jni"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>现在我们就可以直接调用helloJni这个Native函数了，Android Studio会自动帮我们生成libhelloJni.so，不用我们再去手动ndk-build了。</p>
 <h3 id="JNI函数注册"><a href="#JNI函数注册" class="headerlink" title="JNI函数注册"></a>JNI函数注册</h3><h3 id="数据类型转换"><a href="#数据类型转换" class="headerlink" title="数据类型转换"></a>数据类型转换</h3><h3 id="JNIEnv介绍"><a href="#JNIEnv介绍" class="headerlink" title="JNIEnv介绍"></a>JNIEnv介绍</h3><h3 id="操作JObject"><a href="#操作JObject" class="headerlink" title="操作JObject"></a>操作JObject</h3><h3 id="类型签名"><a href="#类型签名" class="headerlink" title="类型签名"></a>类型签名</h3><h3 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h3><h3 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h3>
       
@@ -287,13 +287,13 @@ JNI开发流程 用Android Studio做J">
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2016/03/31/深入理解Android读书笔记 - JNI/">深入理解Android读书笔记 - JNI</a></p>
+        <p><span>本文标题:</span><a href="/2016/04/01/深入理解Android读书笔记 - JNI/">深入理解Android读书笔记 - JNI</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 LiYanZhao 的个人博客">LiYanZhao</a></p>
-        <p><span>发布时间:</span>2016年03月31日 - 23时20分</p>
-        <p><span>最后更新:</span>2016年03月31日 - 23时20分</p>
+        <p><span>发布时间:</span>2016年04月01日 - 13时29分</p>
+        <p><span>最后更新:</span>2016年04月01日 - 13时29分</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2016/03/31/深入理解Android读书笔记 - JNI/" title="深入理解Android读书笔记 - JNI">http://yoursite.com/2016/03/31/深入理解Android读书笔记 - JNI/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2016/03/31/深入理解Android读书笔记 - JNI/　　作者: LiYanZhao" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2016/04/01/深入理解Android读书笔记 - JNI/" title="深入理解Android读书笔记 - JNI">http://yoursite.com/2016/04/01/深入理解Android读书笔记 - JNI/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2016/04/01/深入理解Android读书笔记 - JNI/　　作者: LiYanZhao" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script src="/js/clipboard.min.js"></script>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
@@ -398,7 +398,7 @@ JNI开发流程 用Android Studio做J">
         
     </div>
 
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2016/03/31/深入理解Android读书笔记 - JNI/">深入理解Android读书笔记 - JNI</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/03/15/hello-world/">Hello World</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2016/04/01/深入理解Android读书笔记 - JNI/">深入理解Android读书笔记 - JNI</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/03/15/hello-world/">Hello World</a></li></ul>
     <script>
         $(".post-list").addClass("toc-article");
         $(".post-list-item a").attr("target","_blank");
