@@ -15,7 +15,7 @@ JNI开发流程 用Android Studio做J">
 JNI开发流程 用Android Studio做J">
 <meta property="og:image" content="https://raw.githubusercontent.com/liyanzhao/liyanzhao.github.io/master/img/android_studio_jni.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/liyanzhao/liyanzhao.github.io/master/img/class_loader.png">
-<meta property="og:updated_time" content="2016-04-07T10:57:16.000Z">
+<meta property="og:updated_time" content="2016-04-07T11:01:52.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入理解JNI">
 <meta name="twitter:description" content="JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运行效率能使我们的开发工作更快捷，更有效率。
@@ -238,7 +238,7 @@ JNI开发流程 用Android Studio做J">
   
     <div class="article-meta">
       <a href="/2016/04/07/深入理解JNI/" class="article-date">
-      <time datetime="2016-04-07T10:57:16.000Z" itemprop="datePublished">2016-04-07</time>
+      <time datetime="2016-04-07T11:01:52.000Z" itemprop="datePublished">2016-04-07</time>
 </a>
     </div>
   
@@ -398,7 +398,12 @@ JNI开发流程 用Android Studio做J">
 <h3 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h3><p>在我们的helloJni中传递了一个JniTest对象，现在我想把它保存起来，在helloJniRegister中调用JniTest的nativeCallJava方法：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">jobject  jnitest; <span class="comment">//定义一个全局的JniTest对象</span></span><br><span class="line"></span><br><span class="line"><span class="function">JNIEXPORT jstring JNICALL</span><br><span class="line"><span class="title">Java_test_jni_JniTest_helloJni</span><span class="params">(JNIEnv *env, jclass type, jobject test)</span> </span>&#123;</span><br><span class="line">    jnitest = test; <span class="comment">//保存JniTest对象</span></span><br><span class="line">    <span class="keyword">return</span> (*env)-&gt;NewStringUTF(env, <span class="string">"hello jni"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">JNIEXPORT jstring JNICALL</span><br><span class="line"><span class="title">helloJniRegister</span><span class="params">(JNIEnv *env, jclass type)</span> </span>&#123;</span><br><span class="line">    jmethodID  callJava = (*env)-&gt;GetMethodID(env,type,<span class="string">"nativeCallJava"</span>,<span class="string">"()Ljava/lang/String;"</span>); <span class="comment">//获取jmethodID</span></span><br><span class="line">    <span class="keyword">return</span> (*env)-&gt;CallObjectMethod(env,jnitest,callJava); <span class="comment">//调用</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>好，我们调用一下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">JniTest.helloJni(<span class="keyword">new</span> JniTest());</span><br><span class="line">JniTest.helloJniRegister();</span><br></pre></td></tr></table></figure></p>
 <p>很遗憾，程序崩溃了<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">JNI DETECTED ERROR IN APPLICATION: use of invalid jobject <span class="number">0xffee7460</span></span><br><span class="line">from java.lang.String test.jni.JniTest.helloJniRegister()</span><br></pre></td></tr></table></figure></p>
-<p>异常提示我们使用了一个无效的jobject,可我们的jnitest明明赋值了的，为什么会无效呢？ 在Java中创建的对象是由垃圾回收器回收和释放内存的，我们传递的JniTest对象是一个局部变量，在helloJni执行完成后就被回收了，所以在JNI层jnitest指向的就是一个无效的地址。那么如何避免这种情况呢？ 为了解决这一问题，JNI提供了三种类型的引用：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Local Reference: 局部引用，在JNI层使用的非全局引用全为局部引用，它包括函数传递进来的jobject及在函数中创建的jobject，函数执行完毕后，这些jobject都将被回收。不过在循环中创建的jobject需要显示调用DeleteLocalRef()去释放引用，不然有可能造成local reference table overflow。</span><br><span class="line">Global Reference:全局引用，不主动释放，不会被回收。需显示调用DeleteGlobalRef()释放。创建时也许显示调用NewGlobalRef()。</span><br><span class="line">Weak Global Reference:弱全局引用，在运行过程中有可能被回收，在使用时应调用IsSameObject(env, jobj,NULL)判断是否已被回收。创建和释放是通过 NewWeakGlobalRef() 和 DeleteWeakGlobalRef()</span><br></pre></td></tr></table></figure></p>
+<p>异常提示我们使用了一个无效的jobject,可我们的jnitest明明赋值了的，为什么会无效呢？ 在Java中创建的对象是由垃圾回收器回收和释放内存的，我们传递的JniTest对象是一个局部变量，在helloJni执行完成后就被回收了，所以在JNI层jnitest指向的就是一个无效的地址。那么如何避免这种情况呢？ 为了解决这一问题，JNI提供了三种类型的引用：</p>
+<blockquote>
+<p>Local Reference:<br>局部引用，在JNI层使用的非全局引用全为局部引用，它包括函数传递进来的jobject及在函数中创建的jobject，函数执行完毕后，这些jobject都将被回收。不过在循环中创建的jobject需要显示调用DeleteLocalRef()去释放引用，不然有可能造成local reference table overflow。</p>
+<p>Global Reference:<br>全局引用，不主动释放，不会被回收。需显示调用DeleteGlobalRef()释放。创建时也许显示调用NewGlobalRef()。</p>
+<p>Weak Global Reference:<br>弱全局引用，在运行过程中有可能被回收，在使用时应调用IsSameObject(env, jobj,NULL)判断是否已被回收。创建和释放是通过 NewWeakGlobalRef() 和 DeleteWeakGlobalRef()</p>
+</blockquote>
 <p>现在我们只需修改<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jnitest = test; =&gt;  jnitest = (*env)-&gt;NewGlobalRef(test);</span><br></pre></td></tr></table></figure></p>
 <p>就可以正常运行了。</p>
 <p>PS:</p>
@@ -416,8 +421,8 @@ JNI开发流程 用Android Studio做J">
     <div class="copyright">
         <p><span>本文标题:</span><a href="/2016/04/07/深入理解JNI/">深入理解JNI</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 LiYanZhao 的个人博客">LiYanZhao</a></p>
-        <p><span>发布时间:</span>2016年04月07日 - 18时57分</p>
-        <p><span>最后更新:</span>2016年04月07日 - 18时57分</p>
+        <p><span>发布时间:</span>2016年04月07日 - 19时01分</p>
+        <p><span>最后更新:</span>2016年04月07日 - 19时01分</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2016/04/07/深入理解JNI/" title="深入理解JNI">http://liyanzhao.github.io/2016/04/07/深入理解JNI/</a>
             <span class="copy-path" data-clipboard-text="原文: http://liyanzhao.github.io/2016/04/07/深入理解JNI/　　作者: LiYanZhao" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
