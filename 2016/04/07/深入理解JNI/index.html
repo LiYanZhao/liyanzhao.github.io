@@ -15,7 +15,7 @@ JNI开发流程 用Android Studio做J">
 JNI开发流程 用Android Studio做J">
 <meta property="og:image" content="https://raw.githubusercontent.com/liyanzhao/liyanzhao.github.io/master/img/android_studio_jni.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/liyanzhao/liyanzhao.github.io/master/img/class_loader.png">
-<meta property="og:updated_time" content="2016-04-07T02:02:54.000Z">
+<meta property="og:updated_time" content="2016-04-07T06:22:36.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入理解JNI">
 <meta name="twitter:description" content="JNI概述Java Native Interface简称JNI，即Java本地调用，JNI定义了一种Java层与 Native层通信方式，能使我们在Java层调用Native函数（C/C++函数），同时也能使我们在Native层调用Java方法。对我们开发人员来说丰富成熟的Native语言模块及出色的运行效率能使我们的开发工作更快捷，更有效率。
@@ -238,7 +238,7 @@ JNI开发流程 用Android Studio做J">
   
     <div class="article-meta">
       <a href="/2016/04/07/深入理解JNI/" class="article-date">
-      <time datetime="2016-04-07T02:02:54.000Z" itemprop="datePublished">2016-04-07</time>
+      <time datetime="2016-04-07T06:22:36.000Z" itemprop="datePublished">2016-04-07</time>
 </a>
     </div>
   
@@ -295,7 +295,97 @@ JNI开发流程 用Android Studio做J">
 <p>findMethodInLib内做了两次查找（dlsym），第一次查找是根据类名 + 函数名 查找，如果第一次没找到，第二次则再加上签名信息进行查找。Method找到后让我们回到dvmResolveNativeMethod,接着会调用dvmUseJNIBridge：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span><br><span class="line"> * Point "method-&gt;nativeFunc" at the JNI bridge, and overload "method-&gt;insns"</span><br><span class="line"> * to point at the actual function.</span><br><span class="line"> */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">dvmUseJNIBridge</span><span class="params">(Method* method, <span class="keyword">void</span>* func)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">    DalvikBridgeFunc bridge = gDvmJni.useCheckJni ? dvmCheckCallJNIMethod : dvmCallJNIMethod;</span><br><span class="line">    dvmSetNativeFunc(method, bridge, (<span class="keyword">const</span> u2*) func);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>JNI方法并不是直接调用，而是通过Dalvik虚拟机间接调用，间接调用JNI方法的函数称为Bridge，Bridge函数在调用JNI方法前会执行一些通用的初始化工作，dvmUseJNIBridge主要是通过Dalvik虚拟机的启动选项选择一个合适的Bridge函数，然后调用dvmSetNativeFunc将其赋值给Method的nativeFunc. dvmUseJNIBridge调用完成后下一步就是直接调用Method的nativeFunc所指向的函数，也就是Bridge函数，间接完成我们的JNI方法的调用。<br>以上是静态注册的调用流程，那么动态注册的有何区别 ？ 我们先来看看动态注册都做了什么：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//RegisterNatives内部遍历method_table，调用dvmRegisterJNIMethod</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">dvmRegisterJNIMethod</span><span class="params">(ClassObject* clazz, <span class="keyword">const</span> <span class="keyword">char</span>* methodName,</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>* signature, <span class="keyword">void</span>* fnPtr)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//查找Native函数</span></span><br><span class="line">    Method* method = dvmFindDirectMethodByDescriptor(clazz, methodName, signature);</span><br><span class="line">    <span class="keyword">if</span> (method == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        method = dvmFindVirtualMethodByDescriptor(clazz, methodName, signature);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="comment">//已注册</span></span><br><span class="line">    <span class="keyword">if</span> (method-&gt;nativeFunc != dvmResolveNativeMethod) &#123;</span><br><span class="line">        ALOGV(<span class="string">"Note: %s.%s:%s was already registered"</span>,clazz-&gt;descriptor, methodName, signature);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    method-&gt;fastJni = fastJni;</span><br><span class="line">    <span class="comment">//选择Bridge函数，赋值nativeFunc</span></span><br><span class="line">    dvmUseJNIBridge(method, fnPtr);</span><br><span class="line"></span><br><span class="line">    ALOGV(<span class="string">"JNI-registered %s.%s:%s"</span>, clazz-&gt;descriptor, methodName, signature);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>注册的过程实际上是查找Native函数，并调用dvmUseJNIBridge完成nativeFunc赋值的过程，将静态注册方式执行阶段的工作提前到加载库时完成，因此动态注册不仅在函数名称上方便定义，在执行效率上也是略优于静态注册。</p>
-<h3 id="数据类型转换"><a href="#数据类型转换" class="headerlink" title="数据类型转换"></a>数据类型转换</h3><h3 id="JNIEnv介绍"><a href="#JNIEnv介绍" class="headerlink" title="JNIEnv介绍"></a>JNIEnv介绍</h3><h3 id="操作JObject"><a href="#操作JObject" class="headerlink" title="操作JObject"></a>操作JObject</h3><h3 id="类型签名"><a href="#类型签名" class="headerlink" title="类型签名"></a>类型签名</h3><h3 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h3><h3 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">源码位置</span><br><span class="line"></span><br><span class="line">dvmCallMethod: /dalvik/vm/interp/Stack.cpp</span><br><span class="line"></span><br><span class="line">dvmResolveNativeMethod: /dalvik/vm/Native.cpp</span><br><span class="line"></span><br><span class="line">dvmUseJNIBridge: /dalvik/vm/Jni.cpp</span><br><span class="line"></span><br><span class="line">BaseDexClassLoader:</span><br><span class="line">/dalvik/src/main/java/dalvik/system/BaseDexClassLoader.java</span><br><span class="line"></span><br><span class="line">DexPathList: </span><br><span class="line">/dalvik/src/main/java/dalvik/system/DexPathList.java</span><br><span class="line"></span><br><span class="line">DexFile: </span><br><span class="line">/dalvik/src/main/java/dalvik/system/DexFile.java</span><br><span class="line"></span><br><span class="line">dalvik_system_DexFile:</span><br><span class="line">/dalvik/vm/native/dalvik_system_DexFile.cpp</span><br><span class="line"></span><br><span class="line">Class : /dalvik/vm/oo/Class.cpp</span><br></pre></td></tr></table></figure>
+<h3 id="数据类型转换"><a href="#数据类型转换" class="headerlink" title="数据类型转换"></a>数据类型转换</h3><p>在Java中调用传递的参数是Java数据类型，这些参数到JNI层会做相应的转换。</p>
+<h4 id="基本数据类型转换关系表"><a href="#基本数据类型转换关系表" class="headerlink" title="基本数据类型转换关系表"></a>基本数据类型转换关系表</h4><table>
+<thead>
+<tr>
+<th style="text-align:center">Java</th>
+<th style="text-align:center">Native类型</th>
+<th style="text-align:center">Java</th>
+<th style="text-align:center">Native类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">boolean</td>
+<td style="text-align:center">jboolean</td>
+<td style="text-align:center">byte</td>
+<td style="text-align:center">jbyte    </td>
+</tr>
+<tr>
+<td style="text-align:center"> char</td>
+<td style="text-align:center">jchar</td>
+<td style="text-align:center">short</td>
+<td style="text-align:center">jshort      </td>
+</tr>
+<tr>
+<td style="text-align:center"> int</td>
+<td style="text-align:center">jint</td>
+<td style="text-align:center">float</td>
+<td style="text-align:center">jfloat </td>
+</tr>
+<tr>
+<td style="text-align:center">long</td>
+<td style="text-align:center">jlong</td>
+<td style="text-align:center">double</td>
+<td style="text-align:center">jdouble</td>
+</tr>
+</tbody>
+</table>
+<h4 id="引用数据类型转换关系表"><a href="#引用数据类型转换关系表" class="headerlink" title="引用数据类型转换关系表"></a>引用数据类型转换关系表</h4><table>
+<thead>
+<tr>
+<th style="text-align:center">Java</th>
+<th style="text-align:center">Native类型</th>
+<th style="text-align:center">Java</th>
+<th style="text-align:center">Native类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">all Objects</td>
+<td style="text-align:center">jobject</td>
+<td style="text-align:center">Class</td>
+<td style="text-align:center">jclass </td>
+</tr>
+<tr>
+<td style="text-align:center"> String</td>
+<td style="text-align:center">jstring</td>
+<td style="text-align:center">Throwable</td>
+<td style="text-align:center">jthrowable </td>
+</tr>
+<tr>
+<td style="text-align:center"> boolean[]</td>
+<td style="text-align:center">jbooleanArray</td>
+<td style="text-align:center">byte[]</td>
+<td style="text-align:center">jbyteArray  </td>
+</tr>
+<tr>
+<td style="text-align:center"> char[]</td>
+<td style="text-align:center">jcharArray</td>
+<td style="text-align:center">short[]</td>
+<td style="text-align:center">jshortArray      </td>
+</tr>
+<tr>
+<td style="text-align:center"> int[]</td>
+<td style="text-align:center">jintArray</td>
+<td style="text-align:center">float[]</td>
+<td style="text-align:center">jfloatArray </td>
+</tr>
+<tr>
+<td style="text-align:center">long[]</td>
+<td style="text-align:center">jlongArray</td>
+<td style="text-align:center">double[]</td>
+<td style="text-align:center">jdoubleArray</td>
+</tr>
+<tr>
+<td style="text-align:center"> Object[]</td>
+<td style="text-align:center">jobjectArray</td>
+<td style="text-align:center"></td>
+</tr>
+</tbody>
+</table>
+<h3 id="JNIEnv介绍"><a href="#JNIEnv介绍" class="headerlink" title="JNIEnv介绍"></a>JNIEnv介绍</h3><h3 id="操作JObject"><a href="#操作JObject" class="headerlink" title="操作JObject"></a>操作JObject</h3><h3 id="类型签名"><a href="#类型签名" class="headerlink" title="类型签名"></a>类型签名</h3><h3 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h3><h3 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">源码位置</span><br><span class="line"></span><br><span class="line">dvmCallMethod: /dalvik/vm/interp/Stack.cpp</span><br><span class="line"></span><br><span class="line">dvmResolveNativeMethod: /dalvik/vm/Native.cpp</span><br><span class="line"></span><br><span class="line">dvmUseJNIBridge: /dalvik/vm/Jni.cpp</span><br><span class="line"></span><br><span class="line">BaseDexClassLoader:</span><br><span class="line">/dalvik/src/main/java/dalvik/system/BaseDexClassLoader.java</span><br><span class="line"></span><br><span class="line">DexPathList: </span><br><span class="line">/dalvik/src/main/java/dalvik/system/DexPathList.java</span><br><span class="line"></span><br><span class="line">DexFile: </span><br><span class="line">/dalvik/src/main/java/dalvik/system/DexFile.java</span><br><span class="line"></span><br><span class="line">dalvik_system_DexFile:</span><br><span class="line">/dalvik/vm/native/dalvik_system_DexFile.cpp</span><br><span class="line"></span><br><span class="line">Class : /dalvik/vm/oo/Class.cpp</span><br></pre></td></tr></table></figure>
 
       
     </div>
@@ -306,8 +396,8 @@ JNI开发流程 用Android Studio做J">
     <div class="copyright">
         <p><span>本文标题:</span><a href="/2016/04/07/深入理解JNI/">深入理解JNI</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 LiYanZhao 的个人博客">LiYanZhao</a></p>
-        <p><span>发布时间:</span>2016年04月07日 - 10时02分</p>
-        <p><span>最后更新:</span>2016年04月07日 - 10时02分</p>
+        <p><span>发布时间:</span>2016年04月07日 - 14时22分</p>
+        <p><span>最后更新:</span>2016年04月07日 - 14时22分</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2016/04/07/深入理解JNI/" title="深入理解JNI">http://liyanzhao.github.io/2016/04/07/深入理解JNI/</a>
             <span class="copy-path" data-clipboard-text="原文: http://liyanzhao.github.io/2016/04/07/深入理解JNI/　　作者: LiYanZhao" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -337,7 +427,7 @@ JNI开发流程 用Android Studio做J">
 
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#JNI概述"><span class="toc-number">1.</span> <span class="toc-text">JNI概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JNI开发流程"><span class="toc-number">2.</span> <span class="toc-text">JNI开发流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JNI方法注册"><span class="toc-number">3.</span> <span class="toc-text">JNI方法注册</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JNI方法调用"><span class="toc-number">4.</span> <span class="toc-text">JNI方法调用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据类型转换"><span class="toc-number">5.</span> <span class="toc-text">数据类型转换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JNIEnv介绍"><span class="toc-number">6.</span> <span class="toc-text">JNIEnv介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#操作JObject"><span class="toc-number">7.</span> <span class="toc-text">操作JObject</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类型签名"><span class="toc-number">8.</span> <span class="toc-text">类型签名</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#垃圾回收"><span class="toc-number">9.</span> <span class="toc-text">垃圾回收</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#异常处理"><span class="toc-number">10.</span> <span class="toc-text">异常处理</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#JNI概述"><span class="toc-number">1.</span> <span class="toc-text">JNI概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JNI开发流程"><span class="toc-number">2.</span> <span class="toc-text">JNI开发流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JNI方法注册"><span class="toc-number">3.</span> <span class="toc-text">JNI方法注册</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JNI方法调用"><span class="toc-number">4.</span> <span class="toc-text">JNI方法调用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据类型转换"><span class="toc-number">5.</span> <span class="toc-text">数据类型转换</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#基本数据类型转换关系表"><span class="toc-number">5.1.</span> <span class="toc-text">基本数据类型转换关系表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#引用数据类型转换关系表"><span class="toc-number">5.2.</span> <span class="toc-text">引用数据类型转换关系表</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JNIEnv介绍"><span class="toc-number">6.</span> <span class="toc-text">JNIEnv介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#操作JObject"><span class="toc-number">7.</span> <span class="toc-text">操作JObject</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类型签名"><span class="toc-number">8.</span> <span class="toc-text">类型签名</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#垃圾回收"><span class="toc-number">9.</span> <span class="toc-text">垃圾回收</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#异常处理"><span class="toc-number">10.</span> <span class="toc-text">异常处理</span></a></li></ol>
 </div>
 <style>
     .left-col .switch-btn {
